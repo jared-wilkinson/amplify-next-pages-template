@@ -11,14 +11,26 @@ const client = generateClient<Schema>();
 export default function App() {
   const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
 
+  const [done, setDone] = useState<Array<Schema["Done"]["type"]>>([]);
+  
   function listTodos() {
     client.models.Todo.observeQuery().subscribe({
       next: (data) => setTodos([...data.items]),
     });
   }
 
+  function listDone() {
+    client.models.Done.observeQuery().subscribe({
+      next: (data) => setDone([...data.items]),
+    });
+  }
+
   useEffect(() => {
     listTodos();
+  }, []);
+
+  useEffect(() => {
+    listDone();
   }, []);
 
   function createTodo() {
@@ -28,6 +40,15 @@ export default function App() {
   }
 
   function deleteTodo(id: string) {
+    client.models.Todo.delete({ id });
+  }
+
+  function deleteDone(id: string) {
+    client.models.Done.delete({ id });
+  }
+
+  function completeTask(id: string) {
+    client.models.Done.create({ content: todos.find((todo) => todo.id === id)?.content });
     client.models.Todo.delete({ id });
   }
 
@@ -41,12 +62,23 @@ export default function App() {
       <ul>
         {todos.map((todo) => (
           <li 
-          onClick={() => deleteTodo(todo.id)}
-          key={todo.id}>{todo.content}</li>
+          onClick={() => completeTask(todo.id)}
+          key={todo.id}>{todo.content}
+          </li>
         ))}
       </ul>
       <div>
-        🥳 App successfully hosted. Try creating a new todo.
+      <h1>My done</h1>
+       <ul>
+         {done.map((done) => (
+          <li
+          onClick={() => deleteDone(done.id)}
+          key={done.id}>{done.content}</li>
+        ))}
+        </ul>
+      </div>
+      <div>
+        App successfully hosted. Try creating a new todo.
         <br />
         <a href="https://docs.amplify.aws/gen2/start/quickstart/nextjs-pages-router/">
           Review next steps of this tutorial.
